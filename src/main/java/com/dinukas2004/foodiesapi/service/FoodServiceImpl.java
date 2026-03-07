@@ -15,9 +15,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,7 @@ public class FoodServiceImpl implements FoodService {
 
     private final S3Client s3Client;
     private final FoodRepository foodRepository;
+    private final ObjectMapper objectMapper;
 
     @Value("${aws.s3.bucketname}")
     private String bucketName;
@@ -70,6 +74,12 @@ public class FoodServiceImpl implements FoodService {
         newFoodEntity.setImageUrl(imageUrl);
         newFoodEntity = foodRepository.save(newFoodEntity);
         return convertToResponse(newFoodEntity);
+    }
+
+    @Override
+    public List<FoodResponse> readFoods() {
+        List<FoodEntity> databaseEntries = foodRepository.findAll();
+        return databaseEntries.stream().map(object ->convertToResponse(object)).collect(Collectors.toList());
     }
 
     private FoodEntity convertToEntity(FoodRequest request) {
